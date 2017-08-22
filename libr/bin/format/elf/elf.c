@@ -1253,7 +1253,7 @@ static ut64 get_import_addr(ELFOBJ *bin, int sym) {
 			case EM_ARM:
 			case EM_AARCH64:
 				plt_addr = Elf_(r_bin_elf_get_section_addr) (bin, ".plt");
-				if (plt_addr == 0) {
+				if (plt_addr == -1) {
 					plt_addr = Elf_(r_bin_elf_get_section_addr_end) (bin, ".rela.plt");
 				}
 				if (plt_addr == -1) {
@@ -1303,7 +1303,7 @@ static ut64 get_import_addr(ELFOBJ *bin, int sym) {
 									 : r_read_le64 (buf);
 
 						if (!plt_sym_addr) {
-							//XXX HACK ALERT!!!! full relro?? try to fix it 
+							//XXX HACK ALERT!!!! full relro?? try to fix it
 							//will there always be .plt.got, what would happen if is .got.plt?
 							RBinElfSection *s = get_section_by_name (bin, ".plt.got");
  							if (Elf_(r_bin_elf_has_relro)(bin) < R_ELF_PART_RELRO || !s) {
@@ -1313,7 +1313,7 @@ static ut64 get_import_addr(ELFOBJ *bin, int sym) {
 							of = of + got_addr - got_offset;
 							while (plt_addr + 2 + 4 < s->offset + s->size) {
 								/*we try to locate the plt entry that correspond with the relocation
-								  since got does not point back to .plt. In this case it has the following 
+								  since got does not point back to .plt. In this case it has the following
 								  form
 
 								  ff253a152000   JMP QWORD [RIP + 0x20153A]
@@ -1322,7 +1322,7 @@ static ut64 get_import_addr(ELFOBJ *bin, int sym) {
 								  ff25ec9f0408   JMP DWORD [reloc.puts_236]
 
 								  plt_addr + 2 to remove jmp opcode and get the imm reading 4
-								  and if RIP (plt_addr + 6) + imm == rel->offset 
+								  and if RIP (plt_addr + 6) + imm == rel->offset
 								  return plt_addr, that will be our sym addr
 
 								  perhaps this hack doesn't work on 32 bits
@@ -2462,6 +2462,7 @@ RBinElfSection* Elf_(r_bin_elf_get_sections)(ELFOBJ *bin) {
 				}
 			}
 		}
+		ret[i].name[ELF_STRING_LENGTH - 2] = '\0';
 		// patch shdr empty sections from the phdr "hints". ELF SUCKS
 		RBinElfSection *ps = phdr_sections;
 		if (ps) {
@@ -2476,7 +2477,6 @@ RBinElfSection* Elf_(r_bin_elf_get_sections)(ELFOBJ *bin) {
 				ps++;
 			}
 		}
-		ret[i].name[ELF_STRING_LENGTH - 2] = '\0';
 		ret[i].last = 0;
 	}
 	// append phdr not found in shdr.
@@ -2485,7 +2485,7 @@ RBinElfSection* Elf_(r_bin_elf_get_sections)(ELFOBJ *bin) {
 		int j;
 		while (!ps->last) {
 			for (j = 0; j < i; j++) {
-				if (!strcmp (ret[j].name, ps->name)) {
+				if (ret[j].offset == ps->offset || !strcmp (ret[j].name, ps->name)) {
 					goto next;
 				}
 			}
@@ -2541,6 +2541,7 @@ static RBinElfSymbol* get_symbols_from_phdr(ELFOBJ *bin, int type) {
 	Elf_(Addr) addr_sym_table = 0;
 	ut8 s[sizeof (Elf_(Sym))] = {0};
 	RBinElfSymbol *ret = NULL;
+	RBinElfSection *dynsym = NULL;
 	int i, j, r, tsize, nsym, ret_ctr;
 	ut64 toffset = 0, tmp_offset;
 	ut32 size, sym_size = 0;
@@ -2632,7 +2633,7 @@ static RBinElfSymbol* get_symbols_from_phdr(ELFOBJ *bin, int type) {
 		if (type == R_BIN_ELF_IMPORTS && sym[i].st_shndx == STN_UNDEF) {
 			if (sym[i].st_value) {
 				toffset = sym[i].st_value;
-			} else if ((toffset = get_import_addr (bin, i)) == -1){
+			} else if ((toffset = get_import_addr (bin, i)) == -1) {
 				toffset = 0;
 			}
 			tsize = 16;
@@ -2909,7 +2910,7 @@ static RBinElfSymbol* Elf_(_r_bin_elf_get_symbols_imports)(ELFOBJ *bin, int type
 				if (type == R_BIN_ELF_IMPORTS && sym[k].st_shndx == STN_UNDEF) {
 					if (sym[k].st_value) {
 						toffset = sym[k].st_value;
-					} else if ((toffset = get_import_addr (bin, k)) == -1){
+					} else if ((toffset = get_import_addr (bin, k)) == -1) {
 						toffset = 0;
 					}
 					tsize = 16;
@@ -2919,7 +2920,7 @@ static RBinElfSymbol* Elf_(_r_bin_elf_get_symbols_imports)(ELFOBJ *bin, int type
 					   ELF_ST_TYPE (sym[k].st_info) != STT_FILE) {
 					//int idx = sym[k].st_shndx;
 					tsize = sym[k].st_size;
-					toffset = (ut64)sym[k].st_value; 
+					toffset = (ut64)sym[k].st_value;
 				} else {
 					continue;
 				}

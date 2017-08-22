@@ -1859,21 +1859,11 @@ static int bin_symbols_internal(RCore *r, int mode, ut64 laddr, int va, ut64 at,
 				lastfs = 's';
 			}
 			if (r->bin->prefix) {
-				if (symbol->dup_count) {
-					r_cons_printf ("f %s.%s_%d %u 0x%08"PFMT64x"\n",
-						r->bin->prefix, name, symbol->dup_count, symbol->size, addr);
-				} else {
-					r_cons_printf ("f %s.%s %u 0x%08"PFMT64x"\n",
-						r->bin->prefix, name, symbol->size, addr);
-				}
+				r_cons_printf ("f %s.%s %u 0x%08"PFMT64x"\n",
+					       r->bin->prefix, name, symbol->size, addr);
 			} else {
-				if (symbol->dup_count) {
-					r_cons_printf ("f %s_%d %u 0x%08"PFMT64x"\n",
-						name, symbol->dup_count, symbol->size, addr);
-				} else {
-					r_cons_printf ("f %s %u 0x%08"PFMT64x"\n",
-						name, symbol->size, addr);
-				}
+				r_cons_printf ("f %s %u 0x%08"PFMT64x"\n",
+					       name, symbol->size, addr);
 			}
 			binfile = r_core_bin_cur (r);
 			plugin = r_bin_file_cur_plugin (binfile);
@@ -2380,7 +2370,7 @@ static char* get_rp (const char* rtype) {
 	case 'd':
 		rp = strdup ("double");
 		break;
-	case 'D': 
+	case 'D':
 		rp = strdup ("long double");
 		break;
 	case 'B':
@@ -2389,10 +2379,10 @@ static char* get_rp (const char* rtype) {
 	case '#':
 		rp = strdup ("CLASS");
 		break;
-	default:	
+	default:
 		rp = strdup ("unknown");
 		break;
-	}	
+	}
 	return rp;
 }
 
@@ -2509,11 +2499,11 @@ static int bin_classes(RCore *r, int mode) {
 				}
 			}
 			r_cons_printf ("]}");
-		} else if (IS_MODE_CLASSDUMP (mode)) { 
+		} else if (IS_MODE_CLASSDUMP (mode)) {
 			char *rp = NULL;
 			if (c) {
 				//TODO -> Print Superclass
-				r_cons_printf ("@interface %s :  \n{\n", c->name); 
+				r_cons_printf ("@interface %s :  \n{\n", c->name);
 				r_list_foreach (c->fields, iter2, f) {
 					if (f->name && r_regex_match ("ivar","e", f->name)) {
 						r_cons_printf ("  %s %s\n", f->type, f->name);

@@ -5219,7 +5219,7 @@ static void cmd_anal_graph(RCore *core, const char *input) {
 		case ' ':
 		case 0:
 			{
-				ut64 addr = input[2]? r_num_math (core->num, input + 2): core->offset;
+				ut64 addr = (input[1] && input[2]) ? r_num_math (core->num, input + 2): core->offset;
 				r_core_anal_codexrefs (core, addr, '*');
 			}
 			break;
