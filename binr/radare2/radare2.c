@@ -1095,6 +1095,16 @@ int main(int argc, char **argv, char **envp) {
 		debug = r.file && iod && (r.file->fd == iod->fd) && iod->plugin && \
 			iod->plugin->isdbg;
 		if (debug) {
+			char *ptr1, *ptr2;
+			if ((ptr1 = strdup (iod->uri)) && (ptr2 = strstr (ptr1, "://"))) {
+				*ptr2 = '\0';
+				if (strcmp (ptr1, debugbackend)) {
+					if ((ptr2 = strdup (ptr1))) {
+						debugbackend = ptr2;
+					}
+				}
+				free (ptr1);
+			}
 			r_core_setup_debugger (&r, debugbackend, baddr == UT64_MAX);
 		}
 		if (!debug && r_flag_get (r.flags, "entry0")) {
