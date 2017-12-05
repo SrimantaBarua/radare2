@@ -278,7 +278,10 @@ static int gdbr_parse_target_xml(libgdbr_t *g, char *xml_data, ut64 len) {
 		}
 		break;
 	case R_SYS_ARCH_MIPS:
-		if (!(profile = r_str_prefix (profile, "=PC	pc\n"))) {
+		if (!(profile = r_str_prefix (profile,
+						"=PC	pc\n"
+						"=SP	r29\n"
+						"=BP	r28\n"))) {
 			goto exit_err;
 		}
 		break;
